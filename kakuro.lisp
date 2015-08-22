@@ -44,9 +44,12 @@
   (:documentation "cell representing a constraint on the sum of other cells"))
 
 (defclass blank-cell (cell)
-  ((horiz :accessor horiz :initarg :horiz :initform nil :type constraint-cell)
-   (verti :accessor verti :initarg :verti :initform nil :type constraint-cell)
-   (candidates :initform (make-all-candidates) :type list))
+  ((horiz :accessor horiz :initarg :horiz :initform nil :type constraint-cell
+          :documentation "horizontal constraint cell")
+   (verti :accessor verti :initarg :verti :initform nil :type constraint-cell
+          :documentation "vertical constraint cell")
+   (mark :accessor mark :initform nil
+         :documentation "number written in the cell"))
   (:documentation "cell representing a player-fillable entry with constraints"))
 
 (defclass wall-cell (cell)
@@ -79,40 +82,70 @@
             if (typep cell 'blank-cell)
             collect cell))))
 
+(defmethod cell-col ((c cell))
+  (delete-if-not #'(lambda (x) (eql (verti c) (verti x)))
+                 (blank-cells (puzzle c))))
+
+(defmethod cell-row ((c cell))
+  (delete-if-not #'(lambda (x) (eql (horiz c) (horiz x)))
+                 (blank-cells (puzzle c))))
+
+(defmethod candidates ((c cell))
+  ;; TODO cleanup
+  (let ((cand (make-all-candidates)))
+    (let ((h (horiz (horiz c))))
+      (when h
+        (setf cand (nintersection cand
+                                  (reduce #'union
+                                          (ways h (length (cell-row c))))))))
+    (let ((v (verti (verti c))))
+      (when v
+        (setf cand (nintersection cand
+                                  (reduce #'union
+                                          (ways v (length (cell-col c))))))))
+    (let ((col (cell-col c)))
+      (loop for cell in col
+         if (mark cell)
+         do (setf cand (delete (mark cell) cand))))
+    (let ((row (cell-row c)))
+      (loop for cell in row
+         if (mark cell)
+         do (setf cand (delete (mark cell) cand))))
+    cand))
+
 (defun entry-cell (entry x y)
   (if (symbolp entry)
-      (ecase entry
+      (ecase (intern (symbol-name entry) (symbol-package 'kakuro))
         ((blank b) (make-instance 'blank-cell :x x :y y))
         ((wall w) (make-instance 'wall-cell :x x :y y)))
-      (let ((horiz (first entry)) (verti (second entry)))
+      (let ((horiz (second entry)) (verti (first entry)))
         (make-instance 'constraint-cell :x x :y y
                        :horiz horiz :verti verti))))
 
 (defun parse-puzzle (&optional (stream *standard-input*))
-  (let ((*package* (symbol-package 'kakuro))) ; read into kakuro package
-    (let ((header (read stream)))
-      (unless (eql header 'kakuro)
-        (error (format nil "not a kakuro puzzle: ~a" header)))
-      (let* ((height (read stream)) (width (read stream)))
-        (declare ((integer 1 *) height width))
-        (let ((curr-horiz-constraints (make-array height))
-              (curr-verti-constraints (make-array width))
-              (cells (make-array (list height width))))
-          (loop for x below height do
-               (loop for y below width
-                  for cell = (entry-cell (read stream) x y)
-                  do (setf (aref cells x y) cell)
-                  if (typep cell 'blank-cell)
-                  do (setf (horiz cell) (svref curr-horiz-constraints x)
-                           (verti cell) (svref curr-verti-constraints y))
-                  else
-                  if (typep cell 'wall-cell)
-                  do (setf (svref curr-horiz-constraints x) nil
-                           (svref curr-verti-constraints y) nil)
-                  else
-                  if (typep cell 'constraint-cell)
-                  do (setf (svref curr-horiz-constraints x) (horiz cell)
-                           (svref curr-verti-constraints y) (verti cell))
-                  end
-                  end))
-          (make-instance 'puzzle :height height :width width :cells cells))))))
+  (let ((header (read stream)))
+    (unless (equalp (symbol-name header) "kakuro")
+      (error (format nil "not a kakuro puzzle: ~a" header)))
+    (let* ((height (read stream)) (width (read stream)))
+      (declare ((integer 1 *) height width))
+      (let ((curr-horiz-constraints (make-array height))
+            (curr-verti-constraints (make-array width))
+            (cells (make-array (list height width))))
+        (loop for x below height do
+             (loop for y below width
+                for cell = (entry-cell (read stream) x y)
+                do (setf (aref cells x y) cell)
+                if (typep cell 'blank-cell)
+                do (setf (horiz cell) (svref curr-horiz-constraints x)
+                         (verti cell) (svref curr-verti-constraints y))
+                else
+                if (typep cell 'wall-cell)
+                do (setf (svref curr-horiz-constraints x) nil
+                         (svref curr-verti-constraints y) nil)
+                else
+                if (typep cell 'constraint-cell)
+                do (setf (svref curr-horiz-constraints x) cell
+                         (svref curr-verti-constraints y) cell)
+                end
+                end))
+        (make-instance 'puzzle :height height :width width :cells cells)))))
