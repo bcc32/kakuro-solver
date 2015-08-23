@@ -43,6 +43,12 @@
           :documentation "vertical sum constraint"))
   (:documentation "cell representing a constraint on the sum of other cells"))
 
+(defmethod print-object ((c constraint-cell) stream)
+  (print-unreadable-object (c stream)
+    (format stream "~a\\~a"
+            (or (verti c) " ")
+            (or (horiz c) " "))))
+
 (defclass blank-cell (cell)
   ((horiz :accessor horiz :initarg :horiz :initform nil :type constraint-cell
           :documentation "horizontal constraint cell")
@@ -52,14 +58,24 @@
          :documentation "number written in the cell"))
   (:documentation "cell representing a player-fillable entry with constraints"))
 
+(defmethod print-object ((b blank-cell) stream)
+  (print-unreadable-object (b stream)
+    (if (mark b)
+        (format stream "~d" (mark b))
+        (format stream " "))))
+
 (defclass wall-cell (cell)
   ()
   (:documentation "cell representing a wall with no constraint or entry"))
 
+(defmethod print-object ((w wall-cell) stream)
+  (print-unreadable-object (w stream)
+    (format stream "X")))
+
 (defclass puzzle ()
-  ((height :initarg :height :type (integer 1 *)
+  ((height :accessor height :initarg :height :type (integer 1 *)
            :documentation "number of rows")
-   (width :initarg :width :type (integer 1 *)
+   (width :accessor width :initarg :width :type (integer 1 *)
           :documentation "number of columns")
    (cells :initarg :cells :type (array array)
           :documentation "cells in the puzzle")))
@@ -69,6 +85,14 @@
     (loop for x below height do
          (loop for y below width
             do (setf (puzzle (aref cells x y)) p)))))
+
+(defmethod print-object ((p puzzle) stream)
+  (print-unreadable-object (p stream :type t)
+    (fresh-line stream)
+    (loop for i below (height p) do
+         (loop for j below (width p) do
+              (format stream "~8a" (puzzle-cell p i j)))
+         (terpri stream))))
 
 (defmethod puzzle-cell ((p puzzle) x y)
   "get the cell object at coordinates (x, y)"
