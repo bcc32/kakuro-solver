@@ -93,16 +93,18 @@
 (defmethod candidates ((c cell))
   ;; TODO cleanup
   (let ((cand (make-all-candidates)))
-    (let ((h (horiz (horiz c))))
-      (when h
-        (setf cand (nintersection cand
-                                  (reduce #'union
-                                          (ways h (length (cell-row c))))))))
-    (let ((v (verti (verti c))))
-      (when v
-        (setf cand (nintersection cand
-                                  (reduce #'union
-                                          (ways v (length (cell-col c))))))))
+    (when (horiz c)
+      (let ((h (horiz (horiz c))))
+        (when h
+          (setf cand (nintersection cand
+                                    (reduce #'union
+                                            (ways h (length (cell-row c)))))))))
+    (when (verti c)
+      (let ((v (verti (verti c))))
+        (when v
+          (setf cand (nintersection cand
+                                    (reduce #'union
+                                            (ways v (length (cell-col c)))))))))
     (let ((col (cell-col c)))
       (loop for cell in col
          if (mark cell)
@@ -149,3 +151,14 @@
                 end
                 end))
         (make-instance 'puzzle :height height :width width :cells cells)))))
+
+(defun solve-puzzle (p)
+  (loop
+     with blank-cells = (blank-cells p)
+     while (loop for cell in blank-cells
+              for c = (candidates cell)
+              if (null (mark cell))
+              if (= 1 (length c))
+              do (setf (mark cell) (first c))
+              and return t)
+     finally (return p)))
