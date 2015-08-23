@@ -11,7 +11,7 @@
 (defconstant +max-digit+ 9)
 
 (defun ways (sum len)
-  "Calculate the ways to sum up to `sum` using `len` terms"
+  "calculate the ways to sum up to `sum` using `len` terms"
   (defun ways-aux (sum len max-term)
     (cond
       ((minusp sum) '())
@@ -25,7 +25,7 @@
           (ways-aux sum len +max-digit+)))
 
 (defun make-all-candidates ()
-  "A list of all candidate entries"
+  "list all candidate entries"
   (loop for i from 1 upto +max-digit+ collect i))
 
 (defclass cell ()
@@ -94,11 +94,14 @@
               (format stream "~8a" (puzzle-cell p i j)))
          (terpri stream))))
 
-(defmethod puzzle-cell ((p puzzle) x y)
-  "get the cell object at coordinates (x, y)"
+(defun puzzle-cell (p x y)
+  "get the cell object in `p` at coordinates (`x`, `y`)"
+  (declare (puzzle p))
   (aref (slot-value p 'cells) x y))
 
-(defmethod blank-cells ((p puzzle))
+(defun blank-cells (p)
+  "get the blank cells in `p`"
+  (declare (puzzle p))
   (with-slots (height width cells) p
     (loop for i below height nconc
          (loop for j below width
@@ -106,15 +109,21 @@
             if (typep cell 'blank-cell)
             collect cell))))
 
-(defmethod cell-col ((c cell))
+(defun cell-col (c)
+  "list the cells with the same vertical constraint cell as `c`"
+  (declare (cell c))
   (delete-if-not #'(lambda (x) (eql (verti c) (verti x)))
                  (blank-cells (puzzle c))))
 
-(defmethod cell-row ((c cell))
+(defun cell-row (c)
+  "list the cells with the same horizontal constraint cell as `c`"
+  (declare (cell c))
   (delete-if-not #'(lambda (x) (eql (horiz c) (horiz x)))
                  (blank-cells (puzzle c))))
 
-(defmethod candidates ((c cell))
+(defun candidates (c)
+  "find all the numbers that `c` could possibly hold"
+  (declare (cell c))
   ;; TODO cleanup
   (let ((cand (make-all-candidates)))
     (when (horiz c)
@@ -140,6 +149,7 @@
     cand))
 
 (defun entry-cell (entry x y)
+  "convert an object read from a stream into a cell"
   (if (symbolp entry)
       (ecase (intern (symbol-name entry) (symbol-package 'kakuro))
         ((blank b) (make-instance 'blank-cell :x x :y y))
@@ -149,6 +159,7 @@
                        :horiz horiz :verti verti))))
 
 (defun read-puzzle (&optional (stream *standard-input*))
+  "reads a puzzle object from `stream`"
   (let ((header (read stream)))
     (unless (equalp (symbol-name header) "kakuro")
       (error (format nil "not a kakuro puzzle: ~a" header)))
@@ -177,6 +188,8 @@
         (make-instance 'puzzle :height height :width width :cells cells)))))
 
 (defun solve-puzzle (p)
+  "solve `p` and return it"
+  (declare (puzzle p))
   (loop
      with blank-cells = (blank-cells p)
      while (loop for cell in blank-cells
