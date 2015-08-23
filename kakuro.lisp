@@ -1,10 +1,8 @@
-(in-package :cl-user)
-
 (defpackage :kakuro
   (:documentation "Solver for kakuro puzzles")
   (:use :cl)
-  (:export cell blank-cell constraint-cell wall-cell puzzle
-           read-puzzle solve-puzzle))
+  (:export :cell :blank-cell :constraint-cell :wall-cell :puzzle
+           :read-puzzle :solve-puzzle))
 
 (in-package :kakuro)
 
