@@ -4,7 +4,7 @@
   (:documentation "Solver for kakuro puzzles")
   (:use :cl)
   (:export cell blank-cell constraint-cell wall-cell puzzle
-           parse-puzzle))
+           read-puzzle solve-puzzle))
 
 (in-package :kakuro)
 
@@ -148,7 +148,7 @@
         (make-instance 'constraint-cell :x x :y y
                        :horiz horiz :verti verti))))
 
-(defun parse-puzzle (&optional (stream *standard-input*))
+(defun read-puzzle (&optional (stream *standard-input*))
   (let ((header (read stream)))
     (unless (equalp (symbol-name header) "kakuro")
       (error (format nil "not a kakuro puzzle: ~a" header)))
