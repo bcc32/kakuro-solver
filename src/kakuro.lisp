@@ -47,10 +47,7 @@
   (:documentation "cell representing a constraint on the sum of other cells"))
 
 (defmethod print-object ((c constraint-cell) stream)
-  (print-unreadable-object (c stream)
-    (format stream "~a\\~a"
-            (or (verti c) " ")
-            (or (horiz c) " "))))
+  (format stream "(~a ~a)" (verti c) (horiz c)))
 
 (defclass blank-cell (cell)
   ((horiz :accessor horiz :initarg :horiz :initform nil :type constraint-cell
@@ -62,18 +59,14 @@
   (:documentation "cell representing a player-fillable entry with constraints"))
 
 (defmethod print-object ((b blank-cell) stream)
-  (print-unreadable-object (b stream)
-    (if (mark b)
-        (format stream "~d" (mark b))
-        (format stream " "))))
+  (format stream "~a" (or (mark b) " ")))
 
 (defclass wall-cell (cell)
   ()
   (:documentation "cell representing a wall with no constraint or entry"))
 
 (defmethod print-object ((w wall-cell) stream)
-  (print-unreadable-object (w stream)
-    (format stream "X")))
+  (format stream "w"))
 
 (defclass puzzle ()
   ((height :accessor height :initarg :height :type (integer 1 *)
@@ -90,12 +83,11 @@
             do (setf (puzzle (aref cells x y)) p)))))
 
 (defmethod print-object ((p puzzle) stream)
-  (print-unreadable-object (p stream :type t)
-    (fresh-line stream)
-    (loop for i below (height p) do
-         (loop for j below (width p) do
-              (format stream "~8a" (puzzle-cell p i j)))
-         (terpri stream))))
+  (format stream "kakuro ~d ~d~%" (height p) (width p))
+  (dotimes (i (height p))
+    (dotimes (j (width p))
+      (format stream "~10a" (puzzle-cell p i j)))
+    (terpri stream)))
 
 (defun puzzle-cell (p x y)
   "get the cell object in `p` at coordinates (`x`, `y`)"
