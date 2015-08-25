@@ -8,8 +8,8 @@
 
 (defconstant +max-digit+ 9)
 
-(defun ways (sum len)
-  "calculate the ways to sum up to `sum` using `len` terms"
+(defun ways (sum len &optional other-cells)
+  "calculate the ways to sum up to `sum` using `len` terms, optionally with already-marked cells"
   (defun ways-aux (sum len max-term)
     (cond
       ((minusp sum) '())
@@ -19,8 +19,13 @@
        (loop for term from 1 upto (min sum max-term)
           nconc (mapcar (lambda (way) (cons term way))
                         (ways-aux (- sum term) (1- len) (1- term)))))))
-  (mapcar #'nreverse
-          (ways-aux sum len +max-digit+)))
+  (loop
+     with ways = (mapcar #'nreverse (ways-aux sum len +max-digit+))
+     for cell in other-cells
+     for mark = (mark cell)
+     if mark
+     do (setf ways (delete-if-not (lambda (way) (find mark way)) ways))
+     finally (return ways)))
 
 (defun make-all-candidates ()
   "list all candidate entries"
@@ -124,18 +129,16 @@
   (declare (cell c))
   ;; TODO cleanup
   (let ((cand (make-all-candidates)))
-    (when (horiz c)
-      (let ((h (horiz (horiz c))))
-        (when h
-          (setf cand (nintersection cand
-                                    (reduce #'union
-                                            (ways h (length (cell-row c)))))))))
-    (when (verti c)
-      (let ((v (verti (verti c))))
-        (when v
-          (setf cand (nintersection cand
-                                    (reduce #'union
-                                            (ways v (length (cell-col c)))))))))
+    (when (and (horiz c) (horiz (horiz c)))
+      (let ((h (horiz (horiz c))) (row (cell-row c)))
+        (setf cand (nintersection cand
+                                  (reduce #'union
+                                          (ways h (length row) row))))))
+    (when (and (verti c) (verti (verti c)))
+      (let ((v (verti (verti c))) (col (cell-col c)))
+        (setf cand (nintersection cand
+                                  (reduce #'union
+                                          (ways v (length col) col))))))
     (let ((col (cell-col c)))
       (loop for cell in col
          if (mark cell)
