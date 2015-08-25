@@ -57,7 +57,7 @@
           :documentation "horizontal constraint cell")
    (verti :accessor verti :initarg :verti :initform nil :type constraint-cell
           :documentation "vertical constraint cell")
-   (mark :accessor mark :initform nil
+   (mark :accessor mark :initarg :mark :initform nil
          :documentation "number written in the cell"))
   (:documentation "cell representing a player-fillable entry with constraints"))
 
@@ -151,13 +151,17 @@
 
 (defun entry-cell (entry x y)
   "convert an object read from a stream into a cell"
-  (if (symbolp entry)
-      (ecase (intern (symbol-name entry) (symbol-package 'kakuro))
-        ((blank b) (make-instance 'blank-cell :x x :y y))
-        ((wall w) (make-instance 'wall-cell :x x :y y)))
-      (let ((horiz (second entry)) (verti (first entry)))
-        (make-instance 'constraint-cell :x x :y y
-                       :horiz horiz :verti verti))))
+  (etypecase entry
+    (symbol
+     (ecase (intern (symbol-name entry) (symbol-package 'kakuro))
+       ((blank b) (make-instance 'blank-cell :x x :y y))
+       ((wall w) (make-instance 'wall-cell :x x :y y))))
+    (cons
+     (let ((horiz (second entry)) (verti (first entry)))
+       (make-instance 'constraint-cell :x x :y y
+                      :horiz horiz :verti verti)))
+    (number
+     (make-instance 'blank-cell :x x :y y :mark entry))))
 
 (defun read-puzzle (&optional (stream *standard-input*))
   "reads a puzzle object from `stream`"
