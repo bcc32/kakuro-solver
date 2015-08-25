@@ -1,0 +1,11 @@
+kakuro 10 12
+w	(4 nil)	(15 nil)	w	w	(18 nil)	(12 nil)	(8 nil)	w	w	(24 nil)	(23 nil)
+(nil 3)	b	b	(7 nil)	(nil 15)	b	b	b	w	(24 16)	b	b
+(nil 6)	b	b	b	(16 7)	b	b	b	(35 24)	b	b	b
+w	(12 11)	b	b	b	b	(17 34)	b	b	b	b	b
+(nil 14)	b	b	(nil 23)	b	b	b	(34 14)	b	b	(34 nil)	(16 nil)
+(nil 7)	b	b	(6 15)	b	b	b	b	b	(nil 17)	b	b
+w	(7 nil)	(6 6)	b	b	(23 23)	b	b	b	(10 13)	b	b
+(nil 16)	b	b	b	b	b	(14 30)	b	b	b	b	(10 nil)
+(nil 6)	b	b	b	(nil 23)	b	b	b	(nil 7)	b	b	b
+(nil 4)	b	b	w	(nil 24)	b	b	b	w	(nil 17)	b	b
