@@ -9,29 +9,6 @@
 
 (defconstant +max-digit+ 9)
 
-(defun ways (sum len &optional other-cells)
-  "calculate the ways to sum up to `sum` using `len` terms, optionally with already-marked cells"
-  (defun ways-aux (sum len max-term)
-    (cond
-      ((minusp sum) '())
-      ((and (zerop sum) (= len 0)) (list '()))
-      ((zerop sum) '())
-      (t
-       (loop for term from 1 upto (min sum max-term)
-          nconc (mapcar (lambda (way) (cons term way))
-                        (ways-aux (- sum term) (1- len) (1- term)))))))
-  (loop
-     with ways = (mapcar #'nreverse (ways-aux sum len +max-digit+))
-     for cell in other-cells
-     for mark = (mark cell)
-     if mark
-     do (setf ways (delete-if-not (lambda (way) (find mark way)) ways))
-     finally (return ways)))
-
-(defun make-all-candidates ()
-  "list all candidate entries"
-  (loop for i from 1 upto +max-digit+ collect i))
-
 (defclass cell ()
   ((x :accessor x :initarg :x :type (integer 0 *)
       :documentation "x-coordinate of the cell, origin top-left, going down")
@@ -83,17 +60,17 @@
          (loop for y below width
             do (setf (puzzle (aref cells x y)) p)))))
 
+(defun puzzle-cell (p x y)
+  "get the cell object in `p` at coordinates (`x`, `y`)"
+  (declare (puzzle p))
+  (aref (slot-value p 'cells) x y))
+
 (defmethod print-object ((p puzzle) stream)
   (format stream "kakuro ~d ~d~%" (height p) (width p))
   (dotimes (i (height p))
     (dotimes (j (width p))
       (format stream "~10a" (puzzle-cell p i j)))
     (terpri stream)))
-
-(defun puzzle-cell (p x y)
-  "get the cell object in `p` at coordinates (`x`, `y`)"
-  (declare (puzzle p))
-  (aref (slot-value p 'cells) x y))
 
 (defun blank-cells (p)
   "get the blank cells in `p`"
@@ -116,6 +93,29 @@
   (declare (cell c))
   (delete-if-not #'(lambda (x) (eql (horiz c) (horiz x)))
                  (blank-cells (puzzle c))))
+
+(defun ways (sum len &optional other-cells)
+  "calculate the ways to sum up to `sum` using `len` terms, optionally with already-marked cells"
+  (defun ways-aux (sum len max-term)
+    (cond
+      ((minusp sum) '())
+      ((and (zerop sum) (= len 0)) (list '()))
+      ((zerop sum) '())
+      (t
+       (loop for term from 1 upto (min sum max-term)
+          nconc (mapcar (lambda (way) (cons term way))
+                        (ways-aux (- sum term) (1- len) (1- term)))))))
+  (loop
+     with ways = (mapcar #'nreverse (ways-aux sum len +max-digit+))
+     for cell in other-cells
+     for mark = (mark cell)
+     if mark
+     do (setf ways (delete-if-not (lambda (way) (find mark way)) ways))
+     finally (return ways)))
+
+(defun make-all-candidates ()
+  "list all candidate entries"
+  (loop for i from 1 upto +max-digit+ collect i))
 
 (defun candidates (c)
   "find all the numbers that `c` could possibly hold"
