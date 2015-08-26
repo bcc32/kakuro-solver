@@ -60,7 +60,7 @@
   (:documentation "cell representing a player-fillable entry with constraints"))
 
 (defmethod print-object ((b blank-cell) stream)
-  (format stream "~a" (or (mark b) " ")))
+  (format stream "~a" (or (mark b) "b")))
 
 (defclass wall-cell (cell)
   ()
