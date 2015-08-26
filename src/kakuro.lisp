@@ -2,7 +2,7 @@
   (:documentation "Solver for kakuro puzzles")
   (:use :cl)
   (:export :cell :blank-cell :constraint-cell :wall-cell :puzzle
-           :read-puzzle :solve-puzzle :main))
+           :read-puzzle :clear-puzzle :solve-puzzle :main))
 
 (in-package :kakuro)
 
@@ -183,6 +183,12 @@
                 end
                 end))
         (make-instance 'puzzle :height height :width width :cells cells)))))
+
+(defun clear-puzzle (p)
+  "unmark all of the blank cells in `p` and return it"
+  (dolist (c (blank-cells p))
+    (setf (mark c) nil))
+  p)
 
 (defun solve-puzzle (p)
   "solve `p` and return it"
