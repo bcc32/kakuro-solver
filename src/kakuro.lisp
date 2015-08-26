@@ -2,7 +2,8 @@
   (:documentation "Solver for kakuro puzzles")
   (:use :cl)
   (:export :cell :blank-cell :constraint-cell :wall-cell :puzzle
-           :read-puzzle :solve-puzzle))
+           :read-puzzle :solve-puzzle
+           #+sbcl :main))
 
 (in-package :kakuro)
 
@@ -196,3 +197,20 @@
               do (setf (mark cell) (first c))
               and return t)
      finally (return p)))
+
+;;; TODO add versions for other lisp implementations
+#+sbcl
+(defun main ()
+  "usage: kakuro [input-file [output-file]]"
+  (let ((args-list (cdr sb-ext:*posix-argv*)))
+    (let ((input-stream
+           (if (>= (length args-list) 1)
+               (open (first args-list))
+               *standard-input*))
+          (output-stream
+           (if (>= (length args-list) 2)
+               (open (second args-list) :direction :output
+                     :if-exists :supersede)
+               *standard-output*)))
+      (let ((p (solve-puzzle (read-puzzle input-stream))))
+        (prin1 p output-stream)))))
