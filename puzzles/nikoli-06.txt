@@ -1,0 +1,13 @@
+kakuro 12 20
+w	(3 nil)	(33 nil)	w	(8 nil)	(14 nil)	w	(15 nil)	(19 nil)	(12 nil)	w	(11 nil)	(4 nil)	(16 nil)	w	(11 nil)	(17 nil)	w	(34 nil)	(17 nil)
+(nil 4)	b	b	(3 7)	b	b	(nil 7)	b	b	b	(45 7)	b	b	b	(nil 11)	b	b	(16 16)	b	b
+(nil 16)	b	b	b	b	b	(20 42)	b	b	b	b	b	b	b	(12 35)	b	b	b	b	b
+w	(13 10)	b	b	(33 15)	b	b	b	b	(20 6)	b	b	(nil 7)	b	b	b	(21 13)	b	b	(8 nil)
+(nil 17)	b	b	(11 29)	b	b	b	b	(11 19)	b	b	b	(7 11)	b	b	b	b	(8 9)	b	b
+(nil 29)	b	b	b	b	(nil 33)	b	b	b	b	b	(23 6)	b	b	b	(nil 29)	b	b	b	b
+w	(11 nil)	(15 4)	b	b	w	(23 nil)	(27 16)	b	b	b	b	b	(30 nil)	(7 nil)	(nil 4)	b	b	(15 nil)	(3 nil)
+(nil 12)	b	b	b	b	(26 10)	b	b	b	(27 18)	b	b	b	b	b	(27 12)	b	b	b	b
+(nil 13)	b	b	(7 29)	b	b	b	b	(nil 24)	b	b	b	(24 23)	b	b	b	b	(17 5)	b	b
+w	(5 6)	b	b	(9 24)	b	b	b	(3 4)	b	b	(16 28)	b	b	b	b	(16 11)	b	b	(10 nil)
+(nil 15)	b	b	b	b	b	(nil 41)	b	b	b	b	b	b	b	(nil 34)	b	b	b	b	b
+(nil 3)	b	b	(nil 17)	b	b	(nil 14)	b	b	b	(nil 23)	b	b	b	(nil 11)	b	b	(nil 4)	b	b
