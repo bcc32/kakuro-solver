@@ -169,8 +169,8 @@
       (error (format nil "not a kakuro puzzle: ~a" header)))
     (let* ((height (read stream)) (width (read stream)))
       (declare ((integer 1 *) height width))
-      (let ((curr-horiz-constraints (make-array height))
-            (curr-verti-constraints (make-array width))
+      (let ((curr-horiz-constraints (make-array height :initial-element nil))
+            (curr-verti-constraints (make-array width :initial-element nil))
             (cells (make-array (list height width))))
         (loop for x below height do
              (loop for y below width
