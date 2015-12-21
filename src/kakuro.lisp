@@ -211,5 +211,7 @@
      finally (return p)))
 
 (defun main ()
-  "usage: kakuro [< input_file] [> output_file]"
-  (prin1 (solve-puzzle (read-puzzle))))
+  (handler-case (prin1 (solve-puzzle (read-puzzle)))
+    (warning (con)
+      (print con)
+      (print +usage-notes+))))
