@@ -158,7 +158,7 @@
     (cons
      (let ((horiz (second entry)) (verti (first entry)))
        (make-instance 'constraint-cell :x x :y y
-                      :horiz horiz :verti verti)))
+                      :horizontal-constraint horiz :vertical-constraint verti)))
     (number
      (make-instance 'blank-cell :x x :y y :mark entry))))
 
@@ -212,6 +212,10 @@
 
 (defun main ()
   (handler-case (prin1 (solve-puzzle (read-puzzle)))
-    (warning (con)
+    (error (con)
       (print con)
-      (print +usage-notes+))))
+      (print +usage-notes+))
+    #+sbcl
+    (sb-sys:interactive-interrupt ()
+      (format t "Interrupted.~%")
+      (sb-ext:exit))))
