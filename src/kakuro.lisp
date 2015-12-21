@@ -7,30 +7,33 @@
 (in-package :kakuro)
 
 (defconstant +max-digit+ 9)
+(defconstant +usage-notes+
+  "usage: kakuro [< input_file] [> output_file]")
 
 (defclass cell ()
   ((x :accessor x :initarg :x :type (integer 0 *)
       :documentation "x-coordinate of the cell, origin top-left, going down")
    (y :accessor y :initarg :y :type (integer 0 *)
       :documentation "y-coordinate of the cell, origin top-left, going right")
-   (puzzle :accessor puzzle :initarg :puzzle :type puzzle
+   (puzzle :accessor puzzle-of :initarg :puzzle :type puzzle
            :documentation "puzzle to which this cell belongs")))
 
 (defclass constraint-cell (cell)
-  ((horiz :accessor horiz :initarg :horiz :initform nil
-          :documentation "horizontal sum constraint")
-   (verti :accessor verti :initarg :verti :initform nil
-          :documentation "vertical sum constraint"))
+  ((horizontal-constraint :accessor horizontal-constraint :initarg :horizontal-constraint :initform nil
+          :documentation "required sum of the cells in the same row as this constraint cell")
+   (vertical-constraint :accessor vertical-constraint :initarg :vertical-constraint :initform nil
+          :documentation "required sum of the cells in the same column as this constraint cell"))
   (:documentation "cell representing a constraint on the sum of other cells"))
 
 (defmethod print-object ((c constraint-cell) stream)
-  (format stream "(~a ~a)" (verti c) (horiz c)))
+  ;; constraint on column is displayed left of constraint on row
+  (format stream "(~a ~a)" (vertical-constraint c) (horizontal-constraint c)))
 
 (defclass blank-cell (cell)
-  ((horiz :accessor horiz :initarg :horiz :initform nil :type constraint-cell
-          :documentation "horizontal constraint cell")
-   (verti :accessor verti :initarg :verti :initform nil :type constraint-cell
-          :documentation "vertical constraint cell")
+  ((constraint-row :accessor constraint-row :initarg :constraint-row :initform nil :type constraint-cell
+          :documentation "the constraint cell in whose row this cell belongs")
+   (constraint-col :accessor constraint-col :initarg :constraint-col :initform nil :type constraint-cell
+          :documentation "the constraint cell in whose column this cell belongs")
    (mark :accessor mark :initarg :mark :initform nil
          :documentation "number written in the cell"))
   (:documentation "cell representing a player-fillable entry with constraints"))
@@ -57,7 +60,7 @@
   (with-slots (height width cells) p
     (loop for x below height do
          (loop for y below width
-            do (setf (puzzle (aref cells x y)) p)))))
+            do (setf (puzzle-of (aref cells x y)) p)))))
 
 (defun puzzle-cell (p x y)
   "get the cell object in `p` at coordinates (`x`, `y`)"
@@ -81,17 +84,17 @@
             if (typep cell 'blank-cell)
             collect cell))))
 
-(defun cell-col (c)
-  "list the cells with the same vertical constraint cell as `c`"
-  (declare (cell c))
-  (delete-if-not #'(lambda (x) (eql (verti c) (verti x)))
-                 (blank-cells (puzzle c))))
+(defun cell-col (cell)
+  "list the cells with the same contiguous column as `cell`"
+  (declare (cell cell))
+  (delete-if-not #'(lambda (other-cell) (eql (constraint-col cell) (constraint-col other-cell)))
+                 (blank-cells (puzzle-of cell))))
 
-(defun cell-row (c)
-  "list the cells with the same horizontal constraint cell as `c`"
-  (declare (cell c))
-  (delete-if-not #'(lambda (x) (eql (horiz c) (horiz x)))
-                 (blank-cells (puzzle c))))
+(defun cell-row (cell)
+  "list the cells with the same contiguous row as `cell`"
+  (declare (cell cell))
+  (delete-if-not #'(lambda (other-cell) (eql (constraint-row cell) (constraint-row other-cell)))
+                 (blank-cells (puzzle-of cell))))
 
 (defun ways (sum len &optional other-cells)
   "calculate the ways to sum up to `sum` using `len` terms, optionally with already-marked cells"
@@ -116,26 +119,30 @@
   "list all candidate entries"
   (loop for i from 1 upto +max-digit+ collect i))
 
-(defun candidates (c)
-  "find all the numbers that `c` could possibly hold"
-  (declare (cell c))
+(defun candidates (cell)
+  "find all the numbers that `cell` could possibly hold"
+  (declare (cell cell))
   ;; TODO cleanup
   (let ((cand (make-all-candidates)))
-    (when (and (horiz c) (horiz (horiz c)))
-      (let ((h (horiz (horiz c))) (row (cell-row c)))
+    ;; figure out possible sets of numbers for the respective row/column sums
+    (when (and (constraint-row cell) (horizontal-constraint (constraint-row cell)))
+      (let ((row-sum (horizontal-constraint (constraint-row cell)))
+            (row (cell-row cell)))
         (setf cand (nintersection cand
                                   (reduce #'union
-                                          (ways h (length row) row))))))
-    (when (and (verti c) (verti (verti c)))
-      (let ((v (verti (verti c))) (col (cell-col c)))
+                                          (ways row-sum (length row) row))))))
+    (when (and (constraint-col cell) (vertical-constraint (constraint-col cell)))
+      (let ((col-sum (vertical-constraint (constraint-col cell)))
+            (col (cell-col cell)))
         (setf cand (nintersection cand
                                   (reduce #'union
-                                          (ways v (length col) col))))))
-    (let ((col (cell-col c)))
+                                          (ways col-sum (length col) col))))))
+    ;; remove any candidates which are already in the row/column
+    (let ((col (cell-col cell)))
       (loop for cell in col
          if (mark cell)
          do (setf cand (delete (mark cell) cand))))
-    (let ((row (cell-row c)))
+    (let ((row (cell-row cell)))
       (loop for cell in row
          if (mark cell)
          do (setf cand (delete (mark cell) cand))))
@@ -170,8 +177,8 @@
                 for cell = (entry-cell (read stream) x y)
                 do (setf (aref cells x y) cell)
                 if (typep cell 'blank-cell)
-                do (setf (horiz cell) (svref curr-horiz-constraints x)
-                         (verti cell) (svref curr-verti-constraints y))
+                do (setf (constraint-row cell) (svref curr-horiz-constraints x)
+                         (constraint-col cell) (svref curr-verti-constraints y))
                 else
                 if (typep cell 'wall-cell)
                 do (setf (svref curr-horiz-constraints x) nil
